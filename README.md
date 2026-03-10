@@ -6,78 +6,77 @@
 
 [中文文档](./README.zh-CN.md)
 
-Turn your Cursor subscription into an OpenAI-compatible API.
-
-This project wraps the Cursor CLI (`agent` command) as an HTTP server that speaks the OpenAI API format, so tools like [OpenClaw](https://docs.openclaw.ai), [Continue.dev](https://continue.dev), or any OpenAI-compatible client can use your Cursor subscription directly.
+OpenAI-compatible API proxy for the Cursor CLI. Lets [OpenClaw](https://docs.openclaw.ai), [Continue.dev](https://continue.dev), or any OpenAI-compatible client use your Cursor subscription.
 
 Works on macOS, Linux, and Windows.
 
-## Getting Started
+## Prerequisites
 
-### 1. Install the Cursor CLI
+- **Node.js** 20+
+- **Cursor CLI** (`agent`) — see step 1 below
+- An active **Cursor subscription** (Pro / Business / etc.)
+
+## Setup
+
+### 1. Install and authenticate the Cursor CLI
 
 **macOS / Linux / WSL:**
 
 ```bash
 curl https://cursor.com/install -fsS | bash
-export CURSOR_API_KEY=your_key_here
 ```
 
 **Windows (PowerShell):**
 
 ```powershell
 irm 'https://cursor.com/install?win32=true' | iex
-$env:CURSOR_API_KEY="your_key_here"
 ```
 
-### 2. Install the proxy
+Then log in:
 
-**Option A — npm global install (recommended):**
+```bash
+agent login
+```
+
+This opens a browser for you to sign in with your Cursor account. Once done, the CLI is ready.
+
+> **Headless / CI usage:** If you can't open a browser, generate an API key in [Cursor Settings](https://cursor.com/settings) and set it as an environment variable instead:
+>
+> ```bash
+> export CURSOR_API_KEY=your_key_here   # macOS / Linux
+> ```
+>
+> ```powershell
+> $env:CURSOR_API_KEY="your_key_here"   # Windows PowerShell
+> ```
+
+Verify the CLI works:
+
+```bash
+agent --list-models
+```
+
+### 2. Install and start the proxy
 
 ```bash
 npm install -g cursor-agent-api-proxy
 cursor-agent-api
 ```
 
-**Option B — from source:**
+The server starts on `http://localhost:4646`.
+
+### 3. Verify
 
 ```bash
-git clone https://github.com/tageecc/cursor-agent-api-proxy.git
-cd cursor-agent-api-proxy
-pnpm install && pnpm run build
-pnpm start
+curl http://localhost:4646/health
 ```
 
-The server listens on `http://localhost:4646` by default.
-
-## Try it
-
-**macOS / Linux / WSL:**
+Send a test request:
 
 ```bash
-# non-streaming
 curl -X POST http://localhost:4646/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{"model":"cursor/auto","messages":[{"role":"user","content":"Hello!"}]}'
-
-# streaming
-curl -N -X POST http://localhost:4646/v1/chat/completions \
-  -H "Content-Type: application/json" \
-  -d '{"model":"cursor/auto","messages":[{"role":"user","content":"Hello!"}],"stream":true}'
-```
-
-**Windows (PowerShell):**
-
-```powershell
-# non-streaming
-Invoke-RestMethod -Method POST -Uri http://localhost:4646/v1/chat/completions `
-  -ContentType "application/json" `
-  -Body '{"model":"cursor/auto","messages":[{"role":"user","content":"Hello!"}]}' | ConvertTo-Json -Depth 10
-
-# streaming (curl.exe is built-in on Windows 10+)
-curl.exe -N -X POST http://localhost:4646/v1/chat/completions `
-  -H "Content-Type: application/json" `
-  -d '{\"model\":\"cursor/auto\",\"messages\":[{\"role\":\"user\",\"content\":\"Hello!\"}],\"stream\":true}'
 ```
 
 ## OpenClaw Configuration
@@ -85,7 +84,7 @@ curl.exe -N -X POST http://localhost:4646/v1/chat/completions `
 ```json5
 {
   env: {
-    OPENAI_API_KEY: "your_cursor_api_key",
+    OPENAI_API_KEY: "not-needed",
     OPENAI_BASE_URL: "http://localhost:4646/v1",
   },
   agents: {
@@ -96,11 +95,11 @@ curl.exe -N -X POST http://localhost:4646/v1/chat/completions `
 }
 ```
 
-> You can put your Cursor API Key directly in `OPENAI_API_KEY`. The proxy extracts it from the `Authorization` header and passes it to the Cursor CLI. If you've already set `CURSOR_API_KEY` as a system environment variable, use `"not-needed"` here instead.
+> If you logged in via `agent login`, `OPENAI_API_KEY` can be any non-empty value like `"not-needed"`. If you want to pass a specific Cursor API Key per-request, put it here — the proxy forwards it from the `Authorization` header to the CLI.
 
 ## Models
 
-Specify models with the `cursor/` prefix:
+Prefix with `cursor/`:
 
 | Model ID | Description |
 |----------|-------------|
@@ -114,9 +113,7 @@ Specify models with the `cursor/` prefix:
 | `cursor/gemini-3-pro` | Gemini 3 Pro |
 | `cursor/grok` | Grok |
 
-Dash format (`cursor-auto`, `cursor-opus-4.6`, etc.) is also supported for clients that don't allow `/` in model names.
-
-Full list available at `GET /v1/models`.
+Dash format (`cursor-auto`, `cursor-opus-4.6`) also works for clients that don't allow `/` in model names. Full list: `GET /v1/models`.
 
 ## API
 
@@ -130,40 +127,31 @@ Full list available at `GET /v1/models`.
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `PORT` | `4646` | Listen port |
-| `CURSOR_API_KEY` | - | Cursor API Key (can also be passed via Authorization header) |
+| `PORT` | `4646` | Listen port (also via CLI arg: `cursor-agent-api 8080`) |
+| `CURSOR_API_KEY` | - | Cursor API Key (alternative to `agent login`) |
 
-Port can also be set via CLI argument: `cursor-agent-api 8080`
+## Auto-start Service
 
-## How it Works
-
-```
-Your client (OpenClaw / Python / curl ...)
-    │
-    │  POST /v1/chat/completions  (OpenAI format)
-    ▼
-cursor-agent-api-proxy
-    │
-    │  spawn("agent", ["-p", "--output-format", "stream-json", ...])
-    │  prompt piped via stdin
-    ▼
-Cursor CLI (agent)
-    │
-    │  uses your Cursor subscription quota
-    ▼
-AI model response → converted to OpenAI format → returned to client
+```bash
+cursor-agent-api install    # register and start as system service
+cursor-agent-api uninstall  # remove
 ```
 
-## Other Client Examples
+- macOS → LaunchAgent
+- Windows → Task Scheduler
+- Linux → systemd user service
 
-### Python (openai SDK)
+## Other Clients
+
+<details>
+<summary>Python (openai SDK)</summary>
 
 ```python
 from openai import OpenAI
 
 client = OpenAI(
     base_url="http://localhost:4646/v1",
-    api_key="your_cursor_api_key",  # or "not-needed"
+    api_key="not-needed",
 )
 
 resp = client.chat.completions.create(
@@ -173,7 +161,10 @@ resp = client.chat.completions.create(
 print(resp.choices[0].message.content)
 ```
 
-### Continue.dev
+</details>
+
+<details>
+<summary>Continue.dev</summary>
 
 ```json
 {
@@ -182,44 +173,35 @@ print(resp.choices[0].message.content)
     "provider": "openai",
     "model": "cursor/auto",
     "apiBase": "http://localhost:4646/v1",
-    "apiKey": "your_cursor_api_key"
+    "apiKey": "not-needed"
   }]
 }
 ```
 
-## Auto-start Service
+</details>
+
+## How it Works
+
+```
+Client (OpenClaw / Python / curl ...)
+    │  POST /v1/chat/completions  (OpenAI format)
+    ▼
+cursor-agent-api-proxy
+    │  spawn("agent", ["-p", "--output-format", "stream-json", ...])
+    ▼
+Cursor CLI (agent)
+    │  uses your Cursor subscription
+    ▼
+AI response → OpenAI format → client
+```
+
+## Contributing
 
 ```bash
-cursor-agent-api install    # register and start as system service
-cursor-agent-api uninstall  # remove
-```
-
-Platform-specific backend:
-- macOS → LaunchAgent
-- Windows → Task Scheduler
-- Linux → systemd user service
-
-If `CURSOR_API_KEY` is set in your environment, it will be written into the service config automatically.
-
-## Project Structure
-
-```
-src/
-├── index.ts               # package exports
-├── types/
-│   ├── cursor-cli.ts      # Cursor CLI stream-json output types
-│   └── openai.ts          # OpenAI API types
-├── adapter/
-│   ├── openai-to-cli.ts   # OpenAI request → CLI prompt
-│   └── cli-to-openai.ts   # CLI output → OpenAI response
-├── subprocess/
-│   └── manager.ts         # agent subprocess management
-├── service/
-│   └── install.ts         # install / uninstall service registration
-└── server/
-    ├── index.ts           # Express app
-    ├── routes.ts          # API routes
-    └── standalone.ts      # CLI entry point
+git clone https://github.com/tageecc/cursor-agent-api-proxy.git
+cd cursor-agent-api-proxy
+pnpm install && pnpm run build
+pnpm start
 ```
 
 ## License
