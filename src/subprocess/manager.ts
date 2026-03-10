@@ -12,6 +12,7 @@ import { EventEmitter } from "events";
 import type { CursorCliMessage } from "../types/cursor-cli.js";
 import { isSystemInit, isAssistantDelta, isResultMessage } from "../types/cursor-cli.js";
 
+const IS_WIN = process.platform === "win32";
 const DEFAULT_TIMEOUT = 300_000; // 5 minutes
 
 export interface SubprocessOptions {
@@ -52,12 +53,13 @@ export class CursorSubprocess extends EventEmitter {
           cwd: options.cwd ?? process.cwd(),
           env,
           stdio: ["pipe", "pipe", "pipe"],
+          shell: IS_WIN,
         });
 
         this.timeoutId = setTimeout(() => {
           if (!this.isKilled) {
             this.isKilled = true;
-            this.process?.kill("SIGTERM");
+            this.process?.kill(IS_WIN ? undefined : "SIGTERM");
             this.emit("error", new Error(`Request timed out after ${timeout}ms`));
           }
         }, timeout);
@@ -67,7 +69,9 @@ export class CursorSubprocess extends EventEmitter {
           if (err.message.includes("ENOENT")) {
             reject(
               new Error(
-                "Cursor CLI (agent) not found. Install: curl https://cursor.com/install -fsS | bash"
+                IS_WIN
+                  ? "Cursor CLI (agent) not found. Install: irm 'https://cursor.com/install?win32=true' | iex"
+                  : "Cursor CLI (agent) not found. Install: curl https://cursor.com/install -fsS | bash"
               )
             );
           } else {
@@ -175,11 +179,15 @@ export class CursorSubprocess extends EventEmitter {
     }
   }
 
-  kill(signal: NodeJS.Signals = "SIGTERM"): void {
+  kill(): void {
     if (!this.isKilled && this.process) {
       this.isKilled = true;
       this.clearTimer();
-      this.process.kill(signal);
+      if (IS_WIN) {
+        this.process.kill();
+      } else {
+        this.process.kill("SIGTERM");
+      }
     }
   }
 
@@ -194,7 +202,7 @@ export async function verifyCursorCli(): Promise<{
   version?: string;
 }> {
   return new Promise((resolve) => {
-    const proc = spawn("agent", ["--version"], { stdio: "pipe" });
+    const proc = spawn("agent", ["--version"], { stdio: "pipe", shell: IS_WIN });
     let output = "";
 
     proc.stdout?.on("data", (chunk: Buffer) => {
@@ -205,7 +213,9 @@ export async function verifyCursorCli(): Promise<{
       resolve({
         ok: false,
         error:
-          "Cursor CLI (agent) not found. Install: curl https://cursor.com/install -fsS | bash",
+          IS_WIN
+          ? "Cursor CLI (agent) not found. Install: irm 'https://cursor.com/install?win32=true' | iex"
+          : "Cursor CLI (agent) not found. Install: curl https://cursor.com/install -fsS | bash",
       });
     });
 

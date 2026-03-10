@@ -32,8 +32,13 @@ async function main(): Promise<void> {
   } else {
     console.error(`  ${check.error}`);
     console.error("\nPlease install and authenticate the Cursor CLI first:");
-    console.error("  curl https://cursor.com/install -fsS | bash");
-    console.error("  export CURSOR_API_KEY=your_key_here");
+    if (process.platform === "win32") {
+      console.error("  irm 'https://cursor.com/install?win32=true' | iex");
+      console.error("  set CURSOR_API_KEY=your_key_here");
+    } else {
+      console.error("  curl https://cursor.com/install -fsS | bash");
+      console.error("  export CURSOR_API_KEY=your_key_here");
+    }
     process.exit(1);
   }
 

@@ -6,12 +6,25 @@
 
 ## 快速开始
 
+### 前置条件：安装 Cursor CLI
+
+**macOS / Linux / WSL：**
+
 ```bash
-# 前置条件：安装 Cursor CLI
 curl https://cursor.com/install -fsS | bash
 export CURSOR_API_KEY=your_key_here
+```
 
-# 安装 & 启动
+**Windows (PowerShell)：**
+
+```powershell
+irm 'https://cursor.com/install?win32=true' | iex
+$env:CURSOR_API_KEY="your_key_here"
+```
+
+### 安装 & 启动
+
+```bash
 git clone https://github.com/tageecc/cursor-agent-api-proxy.git
 cd cursor-agent-api-proxy
 pnpm install && pnpm run build
