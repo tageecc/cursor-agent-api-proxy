@@ -184,24 +184,17 @@ print(resp.choices[0].message.content)
 
 ## 开机自启
 
-一条命令搞定，自动识别当前系统（macOS / Windows / Linux）：
-
 ```bash
-cursor-agent-api install
+cursor-agent-api install    # 注册为系统服务并启动
+cursor-agent-api uninstall  # 移除
 ```
 
-会自动注册为系统服务并立即启动：
-- **macOS** — 创建 LaunchAgent，登录后自动运行
-- **Windows** — 创建计划任务（Task Scheduler），登录后自动运行
-- **Linux** — 创建 systemd user service，登录后自动运行
+会根据当前系统注册对应的服务：
+- macOS → LaunchAgent
+- Windows → Task Scheduler
+- Linux → systemd user service
 
-如果环境变量中已有 `CURSOR_API_KEY`，会自动写入服务配置。
-
-卸载自启：
-
-```bash
-cursor-agent-api uninstall
-```
+已设置 `CURSOR_API_KEY` 环境变量的话，会自动写入服务配置。
 
 ## 项目结构
 
@@ -216,6 +209,8 @@ src/
 │   └── cli-to-openai.ts   # CLI 输出 → OpenAI 响应
 ├── subprocess/
 │   └── manager.ts         # agent 子进程管理
+├── service/
+│   └── install.ts         # install / uninstall 服务注册
 └── server/
     ├── index.ts           # Express 服务
     ├── routes.ts          # API 路由

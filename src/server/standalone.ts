@@ -29,6 +29,17 @@ async function main(): Promise<void> {
     return;
   }
 
+  if (cmd === "--help" || cmd === "-h") {
+    console.log("Usage: cursor-agent-api [command|port]\n");
+    console.log("Commands:");
+    console.log("  install      Register as auto-start service");
+    console.log("  uninstall    Remove auto-start service\n");
+    console.log("Options:");
+    console.log("  [port]       Listen port (default: 4646, or $PORT)");
+    console.log("  --help, -h   Show this help");
+    return;
+  }
+
   console.log("Cursor Agent API Proxy");
   console.log("======================\n");
 

@@ -1,6 +1,6 @@
 {
   "name": "cursor-agent-api-proxy",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Use your Cursor subscription with any OpenAI-compatible client. Wraps Cursor CLI (agent) as an OpenAI-compatible API server.",
   "type": "module",
   "main": "dist/index.js",
@@ -13,6 +13,7 @@
     "dev": "tsc --watch",
     "start": "node dist/server/standalone.js",
     "clean": "node -e \"require('fs').rmSync('dist',{recursive:true,force:true})\"",
+    "postinstall": "node scripts/postinstall.js",
     "prepublishOnly": "pnpm run build"
   },
   "keywords": [
