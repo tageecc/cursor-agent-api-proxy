@@ -184,101 +184,24 @@ print(resp.choices[0].message.content)
 
 ## 开机自启
 
-### macOS (LaunchAgent)
+一条命令搞定，自动识别当前系统（macOS / Windows / Linux）：
 
 ```bash
-cat > ~/Library/LaunchAgents/com.cursor-agent-api.plist << 'EOF'
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
-  "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-  <key>Label</key>
-  <string>com.cursor-agent-api</string>
-  <key>RunAtLoad</key>
-  <true/>
-  <key>KeepAlive</key>
-  <true/>
-  <key>ProgramArguments</key>
-  <array>
-    <string>/usr/local/bin/node</string>
-    <string>/usr/local/lib/node_modules/cursor-agent-api-proxy/dist/server/standalone.js</string>
-  </array>
-  <key>EnvironmentVariables</key>
-  <dict>
-    <key>PATH</key>
-    <string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
-    <key>CURSOR_API_KEY</key>
-    <string>your_key_here</string>
-  </dict>
-</dict>
-</plist>
-EOF
-
-launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.cursor-agent-api.plist
+cursor-agent-api install
 ```
 
-### Windows (Task Scheduler)
+会自动注册为系统服务并立即启动：
+- **macOS** — 创建 LaunchAgent，登录后自动运行
+- **Windows** — 创建计划任务（Task Scheduler），登录后自动运行
+- **Linux** — 创建 systemd user service，登录后自动运行
 
-打开 PowerShell（管理员），运行：
-
-```powershell
-$action = New-ScheduledTaskAction `
-  -Execute "node.exe" `
-  -Argument "C:\Users\$env:USERNAME\AppData\Roaming\npm\node_modules\cursor-agent-api-proxy\dist\server\standalone.js"
-
-$trigger = New-ScheduledTaskTrigger -AtLogon
-
-$settings = New-ScheduledTaskSettingsSet `
-  -AllowStartIfOnBatteries `
-  -DontStopIfGoingOnBatteries `
-  -RestartCount 3 `
-  -RestartInterval (New-TimeSpan -Minutes 1)
-
-Register-ScheduledTask `
-  -TaskName "CursorAgentAPI" `
-  -Action $action `
-  -Trigger $trigger `
-  -Settings $settings `
-  -Description "Cursor Agent API Proxy" `
-  -RunLevel Highest
-```
-
-> 路径可能因安装方式不同而变化。运行 `npm root -g` 查看全局 node_modules 路径。
-> 如需设置 `CURSOR_API_KEY`，在系统环境变量中添加即可（设置 → 系统 → 高级系统设置 → 环境变量）。
+如果环境变量中已有 `CURSOR_API_KEY`，会自动写入服务配置。
 
 卸载自启：
 
-```powershell
-Unregister-ScheduledTask -TaskName "CursorAgentAPI" -Confirm:$false
-```
-
-### Linux (systemd)
-
 ```bash
-sudo tee /etc/systemd/system/cursor-agent-api.service << 'EOF'
-[Unit]
-Description=Cursor Agent API Proxy
-After=network.target
-
-[Service]
-Type=simple
-User=YOUR_USERNAME
-Environment=CURSOR_API_KEY=your_key_here
-Environment=PATH=/usr/local/bin:/usr/bin:/bin
-ExecStart=/usr/local/bin/node /usr/local/lib/node_modules/cursor-agent-api-proxy/dist/server/standalone.js
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable --now cursor-agent-api
+cursor-agent-api uninstall
 ```
-
-查看状态：`sudo systemctl status cursor-agent-api`
 
 ## 项目结构
 

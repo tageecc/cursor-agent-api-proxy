@@ -3,24 +3,44 @@
  * Standalone entry point.
  *
  * Usage:
- *   cursor-agent-api [port]
- *   node dist/server/standalone.js [port]
+ *   cursor-agent-api                Start the server (default port 4646)
+ *   cursor-agent-api [port]         Start on a specific port
+ *   cursor-agent-api install        Register as auto-start service
+ *   cursor-agent-api uninstall      Remove auto-start service
  */
 
 import { startServer, stopServer } from "./index.js";
 import { setCachedCliVersion } from "./routes.js";
 import { verifyCursorCli } from "../subprocess/manager.js";
+import { installService, uninstallService } from "../service/install.js";
 
 const DEFAULT_PORT = 4646;
 
 async function main(): Promise<void> {
+  const cmd = process.argv[2];
+
+  if (cmd === "install") {
+    installService();
+    return;
+  }
+
+  if (cmd === "uninstall") {
+    uninstallService();
+    return;
+  }
+
   console.log("Cursor Agent API Proxy");
   console.log("======================\n");
 
-  const portStr = process.argv[2] || process.env.PORT || String(DEFAULT_PORT);
+  const portStr = cmd || process.env.PORT || String(DEFAULT_PORT);
   const port = parseInt(portStr, 10);
   if (isNaN(port) || port < 1 || port > 65535) {
-    console.error(`Invalid port: ${portStr}`);
+    console.error(`Invalid argument: ${portStr}`);
+    console.error("\nUsage:");
+    console.error("  cursor-agent-api              Start server (port 4646)");
+    console.error("  cursor-agent-api [port]       Start on a specific port");
+    console.error("  cursor-agent-api install      Register as auto-start service");
+    console.error("  cursor-agent-api uninstall    Remove auto-start service");
     process.exit(1);
   }
 
