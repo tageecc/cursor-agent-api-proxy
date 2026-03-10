@@ -12,7 +12,7 @@ curl https://cursor.com/install -fsS | bash
 export CURSOR_API_KEY=your_key_here
 
 # 安装 & 启动
-git clone https://github.com/tagecc/cursor-agent-api-proxy.git
+git clone https://github.com/tageecc/cursor-agent-api-proxy.git
 cd cursor-agent-api-proxy
 pnpm install && pnpm run build
 pnpm start
