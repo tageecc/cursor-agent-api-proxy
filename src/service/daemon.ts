@@ -58,11 +58,12 @@ function removePidFile(): void {
 export function daemonStatus(): void {
   const pid = readPid();
   if (pid && isRunning(pid)) {
-    console.log(`cursor-agent-api is running (pid: ${pid})`);
+    console.log(`cursor-agent-api is running (pid: ${pid}).`);
     console.log(`  Logs: ${LOG_FILE}`);
   } else {
     if (pid) removePidFile();
     console.log("cursor-agent-api is not running.");
+    console.log("  Run `cursor-agent-api` to start.");
   }
 }
 
@@ -102,6 +103,8 @@ export function daemonStop(): boolean {
 }
 
 export function daemonStart(port?: number): void {
+  const listenPort = port || parseInt(process.env.PORT || "", 10) || 4646;
+
   const existingPid = readPid();
   if (existingPid && isRunning(existingPid)) {
     console.log(`cursor-agent-api is already running (pid: ${existingPid}).`);
@@ -113,8 +116,7 @@ export function daemonStart(port?: number): void {
   ensureStateDir();
 
   const scriptPath = getStandalonePath();
-  const args = ["--daemon-child"];
-  if (port) args.push(String(port));
+  const args = ["--daemon-child", String(listenPort)];
 
   const logFd = openSync(LOG_FILE, "a");
 
@@ -132,9 +134,19 @@ export function daemonStart(port?: number): void {
   writeFileSync(PID_FILE, String(child.pid));
   child.unref();
 
-  console.log(`cursor-agent-api started (pid: ${child.pid}).`);
-  console.log(`  Logs: ${LOG_FILE}`);
-  console.log(`  Stop: cursor-agent-api stop`);
+  const base = `http://localhost:${listenPort}`;
+  console.log(`
+  ╭─ cursor-agent-api ───────────────────────╮
+  │                                           │
+  │  Status   : running (pid: ${String(child.pid).padEnd(14)}│
+  │  Base URL : ${(base + "/v1").padEnd(29)}│
+  │  Health   : ${(base + "/health").padEnd(29)}│
+  │  Logs     : ~/.cursor-agent-api/server.log│
+  │                                           │
+  │  Stop     : cursor-agent-api stop         │
+  │  Restart  : cursor-agent-api restart      │
+  ╰───────────────────────────────────────────╯
+`);
 }
 
 export function daemonRestart(port?: number): void {

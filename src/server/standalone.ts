@@ -54,9 +54,6 @@ Options:
 }
 
 async function runForeground(port: number): Promise<void> {
-  console.log("Cursor Agent API Proxy");
-  console.log("======================\n");
-
   console.log("Checking Cursor CLI (agent)...");
   const check = await verifyCursorCli();
   if (check.ok) {
@@ -77,8 +74,10 @@ async function runForeground(port: number): Promise<void> {
 
   try {
     await startServer({ port });
-    console.log(`\nServer listening on http://localhost:${port}`);
-    console.log("Press Ctrl+C to stop.\n");
+    const base = `http://localhost:${port}`;
+    console.log(`\n  Base URL : ${base}/v1`);
+    console.log(`  Health   : ${base}/health`);
+    console.log("\n  Press Ctrl+C to stop.\n");
   } catch (err) {
     console.error("Failed to start server:", err);
     process.exit(1);
