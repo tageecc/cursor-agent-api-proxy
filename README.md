@@ -47,15 +47,30 @@ curl http://localhost:4646/health
 
 ## Use with OpenClaw
 
-> [OpenClaw](https://docs.openclaw.ai) is an open-source AI coding agent. Here's how to connect it to your Cursor proxy.
+### First-time setup (onboarding wizard)
 
-Edit the OpenClaw config file:
+If you haven't set up [OpenClaw](https://docs.openclaw.ai) yet, run the onboarding wizard:
+
+```bash
+openclaw onboard
+```
+
+When the wizard asks you to configure **Model/Auth**:
+
+1. Provider type → choose **Custom Provider** (OpenAI-compatible)
+2. Base URL → `http://localhost:4646/v1`
+3. API Key → leave empty or type `null` (not needed if you ran `agent login`)
+4. Default model → `auto` (or any model from `agent --list-models`)
+
+### Existing setup (edit config)
+
+Already have OpenClaw running? Edit the config file directly:
 
 ```json5
 {
   env: {
-    // Already logged in via `agent login`? Set null — no key needed.
-    // Want to pass a specific key? Put your Cursor API Key here.
+    // null = no key needed (already logged in via agent login)
+    // or set your Cursor API Key here to forward it per-request
     OPENAI_API_KEY: null,
     OPENAI_BASE_URL: "http://localhost:4646/v1",
   },
@@ -66,8 +81,6 @@ Edit the OpenClaw config file:
   },
 }
 ```
-
-That's it. OpenClaw will now route requests through this proxy to Cursor.
 
 ## Models
 

@@ -47,15 +47,30 @@ curl http://localhost:4646/health
 
 ## 配合 OpenClaw 使用
 
-> [OpenClaw](https://docs.openclaw.ai) 是开源 AI 编程代理。以下是接入 Cursor 代理的配置方法。
+### 首次安装（onboard 向导）
 
-编辑 OpenClaw 配置文件：
+如果还没装过 [OpenClaw](https://docs.openclaw.ai)，运行引导向导：
+
+```bash
+openclaw onboard
+```
+
+向导进行到 **Model/Auth** 步骤时：
+
+1. Provider 类型 → 选 **Custom Provider**（OpenAI-compatible）
+2. Base URL → `http://localhost:4646/v1`
+3. API Key → 留空或输入 `null`（已 `agent login` 就不需要 key）
+4. Default model → `auto`（或 `agent --list-models` 中的任意模型）
+
+### 已有配置（编辑配置文件）
+
+OpenClaw 已经在用了？直接改配置文件：
 
 ```json5
 {
   env: {
-    // 已通过 agent login 登录？设 null，不需要 key。
-    // 需要指定 key？填你的 Cursor API Key。
+    // null = 不需要 key（已通过 agent login 登录）
+    // 或填你的 Cursor API Key，代理会按请求转发
     OPENAI_API_KEY: null,
     OPENAI_BASE_URL: "http://localhost:4646/v1",
   },
@@ -66,8 +81,6 @@ curl http://localhost:4646/health
   },
 }
 ```
-
-配完就行了，OpenClaw 的请求会通过代理转发给 Cursor。
 
 ## 模型
 
