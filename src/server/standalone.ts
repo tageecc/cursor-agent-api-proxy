@@ -22,6 +22,8 @@ import {
   daemonStop,
   daemonRestart,
   daemonStatus,
+  registerForegroundPid,
+  clearPidFile,
 } from "../service/daemon.js";
 
 const DEFAULT_PORT = 4646;
@@ -74,6 +76,7 @@ async function runForeground(port: number): Promise<void> {
 
   try {
     await startServer({ port });
+    registerForegroundPid();
     const base = `http://localhost:${port}`;
     console.log(`\n  Base URL : ${base}/v1`);
     console.log(`  Health   : ${base}/health`);
@@ -86,6 +89,7 @@ async function runForeground(port: number): Promise<void> {
   const shutdown = async () => {
     console.log("\nShutting down...");
     await stopServer();
+    clearPidFile();
     process.exit(0);
   };
 

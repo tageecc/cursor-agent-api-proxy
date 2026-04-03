@@ -1,6 +1,6 @@
 {
   "name": "cursor-agent-api-proxy",
-  "version": "1.5.2",
+  "version": "1.5.3",
   "description": "Use your Cursor subscription with any OpenAI-compatible client. Wraps Cursor CLI (agent) as an OpenAI-compatible API server.",
   "type": "module",
   "main": "dist/index.js",

@@ -55,6 +55,12 @@ function removePidFile(): void {
   } catch {}
 }
 
+/** Foreground server (e.g. systemd / run) — enables status/stop to find this process. */
+export function registerForegroundPid(): void {
+  ensureStateDir();
+  writeFileSync(PID_FILE, String(process.pid));
+}
+
 export function daemonStatus(): void {
   const pid = readPid();
   if (pid && isRunning(pid)) {
@@ -101,6 +107,8 @@ export function daemonStop(): boolean {
   console.log(`cursor-agent-api stopped (was pid: ${pid}).`);
   return true;
 }
+
+export { removePidFile as clearPidFile };
 
 export function daemonStart(port?: number): void {
   const listenPort = port || parseInt(process.env.PORT || "", 10) || 4646;

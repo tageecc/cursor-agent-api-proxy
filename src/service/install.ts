@@ -47,6 +47,7 @@ function installMacOS(): void {
   <array>
     <string>${nodePath}</string>
     <string>${scriptPath}</string>
+    <string>run</string>
   </array>
   <key>EnvironmentVariables</key>
   <dict>
@@ -99,7 +100,7 @@ function installWindows(): void {
   } catch { /* task doesn't exist yet */ }
 
   execSync(
-    `schtasks /Create /TN "${WIN_TASK_NAME}" /TR "\\"${nodePath}\\" \\"${scriptPath}\\"" /SC ONLOGON /RL HIGHEST /F`,
+    `schtasks /Create /TN "${WIN_TASK_NAME}" /TR "\\"${nodePath}\\" \\"${scriptPath}\\" run" /SC ONLOGON /RL HIGHEST /F`,
     { stdio: "inherit" }
   );
 
@@ -138,7 +139,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=${nodePath} ${scriptPath}
+ExecStart=${nodePath} ${scriptPath} run
 Restart=on-failure
 RestartSec=5${process.env.CURSOR_API_KEY ? `\nEnvironment=CURSOR_API_KEY=${process.env.CURSOR_API_KEY}` : ""}
 
