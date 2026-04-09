@@ -14,16 +14,39 @@ import {
 } from "../adapter/cli-to-openai.js";
 import type { OpenAIChatRequest } from "../types/openai.js";
 
+/**
+ * IDs advertised by GET /v1/models — real CLI IDs plus friendly aliases
+ * (aliases must match MODEL_ALIASES in openai-to-cli.ts).
+ */
 const KNOWN_MODELS = [
   "auto",
+  "composer-2",
+  "composer-2-fast",
   "composer-1.5",
   "composer-1",
-  "opus-4.6-thinking",
+  "claude-4.6-sonnet-medium",
+  "claude-4.6-sonnet-medium-thinking",
+  "claude-4.6-opus-high",
+  "claude-4.6-opus-high-thinking",
+  "claude-4.6-opus-max",
+  "claude-4.6-opus-max-thinking",
+  "claude-4.5-sonnet",
+  "claude-4.5-sonnet-thinking",
+  "claude-4.5-opus-high",
+  "claude-4.5-opus-high-thinking",
+  "claude-4-sonnet",
+  "claude-4-sonnet-thinking",
+  "sonnet-4.6",
   "opus-4.6",
-  "opus-4.5-thinking",
-  "opus-4.5",
-  "sonnet-4.5-thinking",
+  "opus-4.6-thinking",
   "sonnet-4.5",
+  "sonnet-4.5-thinking",
+  "opus-4.5",
+  "opus-4.5-thinking",
+  "gpt-5.4-low",
+  "gpt-5.4-medium",
+  "gpt-5.4-high",
+  "gpt-5.4-xhigh",
   "gpt-5.3-codex",
   "gpt-5.3-codex-fast",
   "gpt-5.3-codex-low",
@@ -37,10 +60,16 @@ const KNOWN_MODELS = [
   "gpt-5.2-codex",
   "gpt-5.2-codex-low",
   "gpt-5.2-codex-low-fast",
-  "gpt-5.1-codex-max",
-  "gemini-3-pro",
+  "gpt-5.1-codex-max-low",
+  "gpt-5.1-codex-max-medium",
+  "gpt-5.1-codex-max-high",
+  "gpt-5.1-codex-mini",
+  "gemini-3.1-pro",
   "gemini-3-flash",
+  "gemini-3-pro",
+  "grok-4-20",
   "grok",
+  "kimi-k2.5",
 ];
 
 function extractApiKey(req: Request): string | undefined {

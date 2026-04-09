@@ -124,6 +124,10 @@ export class CursorSubprocess extends EventEmitter {
       "stream-json",
       "--stream-partial-output",
       "--yolo",
+      // Non-interactive HTTP proxy: no TTY and no user to answer prompts.
+      // --trust lets the CLI skip trust/workspace confirmation that would
+      // otherwise block or exit without emitting stream-json results.
+      "--trust",
     ];
 
     if (options.model && options.model !== "auto") {
